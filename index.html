@@ -1,0 +1,62 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+  <title>Send Location to Webhook</title>
+  <style>
+    body { font-family: Arial; padding: 20px; }
+    #status { margin-top: 20px; font-size: 1.1em; color: green; }
+  </style>
+</head>
+<body>
+  <h2>📍 Send Location to Webhook</h2>
+  <button onclick="getLocation()">Send My Location</button>
+  <div id="status"></div>
+
+  <script>
+    const webhookURL = "https://webhook.site/d3253447-4816-4a4c-a0c2-9cd53f5dd6af"; // Replace with actual URL
+
+    function getLocation() {
+      const status = document.getElementById("status");
+      status.innerHTML = "⏳ Getting your location...";
+
+      if ("geolocation" in navigator) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const lat = position.coords.latitude;
+            const lon = position.coords.longitude;
+
+            fetch(webhookURL, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                latitude: lat,
+                longitude: lon,
+                timestamp: new Date().toISOString(),
+                userAgent: navigator.userAgent
+              })
+            })
+            .then(response => {
+              if (response.ok) {
+                status.innerHTML = `✅ Sent!<br>Lat: ${lat}<br>Lon: ${lon}`;
+              } else {
+                status.innerHTML = "❌ Server error.";
+              }
+            })
+            .catch(err => {
+              console.error(err);
+              status.innerHTML = "❌ Failed to send location (fetch error).";
+            });
+          },
+          (error) => {
+            status.innerHTML = "❌ Location access denied or failed.";
+            console.error(error);
+          },
+          { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+        );
+      } else {
+        status.innerHTML = "❌ Geolocation not supported.";
+      }
+    }
+  </script>
+</body>
+</html>
